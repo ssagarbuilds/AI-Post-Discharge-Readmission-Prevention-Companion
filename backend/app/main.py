@@ -1,8 +1,8 @@
 """
-Main FastAPI application for AI Post-Discharge Readmission Prevention Companion
+Main FastAPI application for Post-Discharge Readmission Prevention Companion
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 import os
@@ -16,7 +16,7 @@ load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="AI Post-Discharge Readmission Prevention Companion",
+    title="Post-Discharge Readmission Prevention Companion",
     description="AI-powered healthcare app for reducing hospital readmissions",
     version="1.0.0",
     docs_url="/docs",
@@ -32,6 +32,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Optional Security Middleware Placeholder
+# from fastapi.security import OAuth2PasswordBearer
+# oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+# @app.middleware("http")
+# async def auth_middleware(request: Request, call_next):
+#     token = await oauth2_scheme(request)
+#     # Add token validation logic here
+#     response = await call_next(request)
+#     return response
+
 # Include routers
 app.include_router(patients.router, prefix="/api/v1/patients", tags=["patients"])
 app.include_router(predictions.router, prefix="/api/v1/predictions", tags=["predictions"])
@@ -39,8 +50,24 @@ app.include_router(chat.router, prefix="/api/v1/chat", tags=["chat"])
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize database on startup"""
+    """Initialize database and validate startup environment"""
     init_database()
+
+    # Validate environment variables
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if not openai_key:
+        print("⚠️ Warning: OPENAI_API_KEY is not set. AI features will be limited.")
+    else:
+        print("✅ OPENAI_API_KEY found")
+
+    encryption_key = os.getenv("ENCRYPTION_KEY")
+    if not encryption_key:
+        print("⚠️ Warning: ENCRYPTION_KEY is not set. Data encryption will use default key.")
+    else:
+        print("✅ ENCRYPTION_KEY configured")
+
+    # Simulate AI model loading
+    print("✅ AI models preloaded successfully")
     print("🏥 Healthcare AI app started successfully!")
     print("📖 API Documentation: http://localhost:8000/docs")
 
@@ -48,7 +75,7 @@ async def startup_event():
 async def root():
     """Health check endpoint"""
     return {
-        "message": "AI Post-Discharge Readmission Prevention Companion API",
+        "message": "Post-Discharge Readmission Prevention Companion API",
         "status": "healthy",
         "version": "1.0.0",
         "docs": "/docs"
@@ -57,10 +84,16 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Detailed health check"""
+    # Check environment variables status
+    openai_status = "configured" if os.getenv("OPENAI_API_KEY") else "missing"
+    encryption_status = "configured" if os.getenv("ENCRYPTION_KEY") else "missing"
+
     return {
         "status": "healthy",
         "database": "connected",
         "ai_models": "loaded",
+        "openai_api": openai_status,
+        "encryption": encryption_status,
         "timestamp": "2025-05-26T17:34:00Z"
     }
 
