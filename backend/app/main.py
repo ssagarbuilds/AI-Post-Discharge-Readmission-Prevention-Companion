@@ -1,5 +1,5 @@
 """
-Main FastAPI application for Post-Discharge Readmission Prevention Companion
+Main FastAPI application for AI Post-Discharge Readmission Prevention Companion
 """
 
 from fastapi import FastAPI, Request
@@ -18,7 +18,7 @@ load_dotenv()
 
 # Initialize FastAPI app
 app = FastAPI(
-    title="Post-Discharge Readmission Prevention Companion",
+    title="AI Post-Discharge Readmission Prevention Companion",
     description="AI-powered healthcare app for reducing hospital readmissions",
     version="1.0.0",
     docs_url="/docs",
@@ -126,7 +126,7 @@ async def startup_event():
     """Initialize database, validate environment, and preload AI models"""
     global startup_complete
 
-    print("🚀 Starting Post-Discharge Readmission Prevention Companion...")
+    print("🚀 Starting AI Post-Discharge Readmission Prevention Companion...")
     print("=" * 60)
 
     # Initialize database
@@ -165,7 +165,7 @@ async def startup_event():
 async def root():
     """Health check endpoint"""
     return {
-        "message": "Post-Discharge Readmission Prevention Companion API",
+        "message": "AI Post-Discharge Readmission Prevention Companion API",
         "status": "healthy" if startup_complete else "starting",
         "version": "1.0.0",
         "docs": "/docs",
@@ -202,7 +202,7 @@ async def health_check():
 async def system_status():
     """Detailed system status for monitoring"""
     return {
-        "application": "Post-Discharge Readmission Prevention Companion",
+        "application": "AI Post-Discharge Readmission Prevention Companion",
         "version": "1.0.0",
         "status": "operational" if startup_complete else "initializing",
         "components": {
