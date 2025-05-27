@@ -1,25 +1,83 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
+  app:
+    build: .
     ports:
       - "8000:8000"
     environment:
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - DATABASE_URL=sqlite:///./healthcare.db
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY}
+      - REDIS_URL=redis://redis:6379
+      - CHROMADB_HOST=chromadb
+      - QDRANT_HOST=qdrant
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - chromadb
+      - qdrant
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/healthcare.db:/app/healthcare.db
+      - ./app:/app/app
+      - healthcare_data:/app/data
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - chromadb_data:/chroma/chroma
+    environment:
+      - CHROMA_SERVER_HOST=0.0.0.0
     restart: unless-stopped
 
-  frontend:
-    build: ./frontend
+  qdrant:
+    image: qdrant/qdrant:latest
     ports:
-      - "3000:3000"
-    environment:
-      - REACT_APP_API_URL=http://localhost:8000
-    depends_on:
-      - backend
+      - "6333:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage
     restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana:/etc/grafana/provisioning
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    restart: unless-stopped
+
+volumes:
+  healthcare_data:
+  redis_data:
+  chromadb_data:
+  qdrant_data:
+  prometheus_data:
+  grafana_data:
