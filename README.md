@@ -1,64 +1,142 @@
-# AI Post-Discharge Readmission Prevention Companion
+# AI Post Discharge Prevention Companion
 
-A bilingual (English/Spanish) AI-powered healthcare app that predicts readmission risk and generates personalized care plans for post-discharge patients.
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Production-green.svg)](https://fastapi.tiangolo.com)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![HIPAA](https://img.shields.io/badge/HIPAA-Compliant-red.svg)](https://www.hhs.gov/hipaa)
 
-## 🚀 Features
+## 🚀 Overview
 
-- 🔮 **AI Risk Prediction**: HAIM + XGBoost + GPT-4o hybrid model
-- 📋 **Care Plan Generation**: Automated, personalized post-discharge instructions
-- 🤖 **Bilingual Chatbot**: Medical Spanish terminology support
-- 🏠 **SDOH Detection**: Social determinants extraction from discharge notes
-- 🔒 **Privacy-First**: Local deployment, encrypted data at rest
-- 🌐 **Bilingual UI**: Full English/Spanish interface
+**AI Post Discharge Prevention Companion** is a production-ready, multimodal, multi-agent healthcare AI platform for reducing hospital readmissions, improving patient engagement, and supporting clinicians with advanced analytics and decision support.
 
-## 📦 Quick Start
+- **Multimodal AI:** Text, imaging, audio, and structured EHR data
+- **25+ Specialized AI Agents:** Risk prediction, care planning, cognitive assessment, SDOH, analytics, and more
+- **Explainable, Secure, and HIPAA-Ready**
+- **Low capital, cloud-optional, and open-source friendly**
 
-### Prerequisites
-- Node.js 18+ and npm
-- Python 3.9+
-- Git
+---
 
-### 1. Setup Backend
-cd backend
-python -m venv .venv
-source .venv/bin/activate # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+## 🏗️ Features
 
-### 2. Configure Environment
-Create `backend/.env`:
-OPENAI_API_KEY=your_openai_api_key_here
-DATABASE_URL=sqlite:///./healthcare.db
-ENCRYPTION_KEY=your_32_character_encryption_key_here
+- **AI Risk Prediction:** Readmission, early disease, chronic care
+- **Cognitive & Symptom Assessment:** Voice and text-based
+- **Care Plan Generation:** Personalized, evidence-based, multilingual
+- **Patient Portal & Chatbot:** 24/7, bilingual (EN/ES), accessible
+- **Population Health Analytics:** Real-time BI dashboards
+- **Social Determinants of Health (SDOH):** Extraction and analytics
+- **Federated Learning & Synthetic Data:** Privacy-first, research-ready
+- **Blockchain Audit Logging & Compliance:** HIPAA, DPDP, GDPR
 
-### 3. Start Backend
-cd backend
-source .venv/bin/activate
-python -m uvicorn app.main:app --reload
+---
 
-### 4. Setup Frontend
-cd frontend
-npm install
-npm start
+## ⚡ Quick Start
 
-### 5. Access Application
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
+### 1. Clone & Setup
 
-## 🐳 Docker Deployment
+git clone https://github.com/your-org/AI_Post_Discharge_Companion.git
+cd AI_Post_Discharge_Companion
+cp .env.example .env
+
+### 2. Run with Docker
+
 docker-compose up --build
 
-## 💰 Cost Breakdown
-- Development: $0 (open source)
-- Deployment: $5-20/month (VPS)
-- API Costs: $50-100/month (OpenAI GPT-4o)
-- **Total**: ~$200-300 startup capital
+Access the API at [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### 3. Local Development (optional)
+
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+
+---
+
+## 🧠 Core Concepts
+
+- **Multi-Agent Architecture:** Modular AI agents for clinical, engagement, analytics, and infrastructure tasks
+- **Multimodal Processing:** Handles EHR, imaging, voice, and wearable data
+- **Explainability:** Every prediction is explainable and auditable
+- **Security:** End-to-end encryption, audit logs, and compliance by design
+
+---
+
+## 🛠️ API Examples
+
+#### Patient Risk Prediction
+
+POST /api/v1/predictions/risk
+{
+"patient_id": "12345"
+}
+
+#### Cognitive Assessment (Voice)
+
+POST /api/v1/cognitive/assessment
+
+multipart/form-data: audio file + patient_id
+
+#### Patient Portal Chat
+
+POST /api/v1/chat/message
+{
+"message": "I feel dizzy",
+"language": "en"
+}
+
+#### Business Intelligence Dashboard
+
+GET /api/v1/analytics/bi
+
+## 📦 Project Structure
+
+app/
+main.py # FastAPI application entrypoint
+config/ # Settings and environment
+database/ # DuckDB/SQLite management
+models/ # All AI agents and models
+routes/ # API endpoints
+schemas/ # Pydantic schemas
+utils/ # Utilities, logging, helpers
+static/ # Dashboards, sample data
+frontend/ # Next.js 14 (EN/ES, Shadcn/ui)
+
+---
 
 ## 🔒 Security & Compliance
-- HIPAA/DPDP compliant
-- AES-256 encryption at rest
-- No cloud dependencies
-- Local data processing
 
-## 📄 License
-MIT License
+- AES-256 encryption, SQLCipher, and blockchain audit logging
+- Role-based access, OAuth2, and Next-Auth
+- HIPAA, GDPR, DPDP, and FDA-ready
+
+---
+
+## 📚 Documentation
+
+- **API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+- **System Status:** [http://localhost:8000/api/v1/status](http://localhost:8000/api/v1/status)
+
+---
+
+## 🤝 Contributing
+
+PRs, issues, and feature requests welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## 🆘 Support
+
+- **Issues:** [GitHub Issues](https://github.com/your-org/AI_Post_Discharge_Companion/issues)
+- **Email:** support@yourdomain.com
+
+---
+
+## 📝 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+**Built with ❤️ for healthcare organizations and innovators worldwide.**
