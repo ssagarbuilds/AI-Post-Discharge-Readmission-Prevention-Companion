@@ -13,7 +13,7 @@ from app.database.db_manager import get_database
 from app.models.infrastructure.multiagent_orchestrator import MultiAgentOrchestrator
 
 __all__ = [
-    "settings",
+    "settings.py",
     "get_database",
     "MultiAgentOrchestrator"
 ]
