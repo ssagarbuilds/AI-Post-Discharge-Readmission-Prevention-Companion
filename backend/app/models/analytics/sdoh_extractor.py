@@ -369,4 +369,215 @@ class SDOHExtractor:
         severity_scores = []
         for category, data in sdoh_factors.items():
             severity = data.get("severity", "mild")
-            confidence = data.get("confidence", 0.5
+            confidence = data.get("confidence", 0.5 )
+
+            severity_scores.append(self._severity_to_score(severity))
+            severity_analysis["category_severities"][category] = {
+                "severity": severity,
+                "confidence": confidence,
+                "impact_factors": self._assess_category_impact(category, data, patient_data)
+            }
+
+        # Calculate overall severity
+        if severity_scores:
+            avg_severity_score = sum(severity_scores) / len(severity_scores)
+            if avg_severity_score >= 2.5:
+                severity_analysis["overall_severity"] = "severe"
+            elif avg_severity_score >= 1.5:
+                severity_analysis["overall_severity"] = "moderate"
+            else:
+                severity_analysis["overall_severity"] = "mild"
+
+        # Identify vulnerability factors
+        vulnerability_factors = []
+        if patient_data.get("age", 0) > 65:
+            vulnerability_factors.append("advanced_age")
+        if len(patient_data.get("conditions", [])) > 2:
+            vulnerability_factors.append("multiple_comorbidities")
+        if patient_data.get("insurance_type") in ["medicaid", "uninsured"]:
+            vulnerability_factors.append("insurance_barriers")
+
+        severity_analysis["vulnerability_factors"] = vulnerability_factors
+
+        return severity_analysis
+
+    def _severity_to_score(self, severity: str) -> float:
+        """Convert severity to numerical score"""
+        severity_map = {"mild": 1.0, "moderate": 2.0, "severe": 3.0}
+        return severity_map.get(severity, 1.0)
+
+    def _assess_category_impact(self, category: str, data: Dict[str, Any], patient_data: Dict[str, Any]) -> List[str]:
+        """Assess impact factors for specific SDOH category"""
+        impact_factors = []
+
+        if category == "economic_stability":
+            if "unemployed" in data.get("keywords_found", []):
+                impact_factors.append("income_loss")
+            if "insurance" in " ".join(data.get("keywords_found", [])):
+                impact_factors.append("healthcare_access_risk")
+
+        elif category == "healthcare_access":
+            if "transportation" in " ".join(data.get("keywords_found", [])):
+                impact_factors.append("appointment_barriers")
+            if "distance" in " ".join(data.get("keywords_found", [])):
+                impact_factors.append("geographic_barriers")
+
+        elif category == "food_security":
+            if "hungry" in data.get("keywords_found", []):
+                impact_factors.append("nutritional_deficiency_risk")
+            if patient_data.get("conditions") and "diabetes" in patient_data["conditions"]:
+                impact_factors.append("diabetes_management_risk")
+
+        return impact_factors
+
+    def _generate_interventions(self, sdoh_factors: Dict[str, Any], severity_analysis: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate targeted interventions for identified SDOH factors"""
+        interventions = []
+
+        for category, data in sdoh_factors.items():
+            severity = data.get("severity", "mild")
+            confidence = data.get("confidence", 0.5)
+
+            # Get category-specific interventions
+            category_interventions = self.intervention_mapping.get(category, [])
+
+            for intervention in category_interventions:
+                priority = self._calculate_intervention_priority(severity, confidence, category)
+
+                interventions.append({
+                    "category": category,
+                    "intervention": intervention,
+                    "priority": priority,
+                    "urgency": "immediate" if severity == "severe" else "within_week" if severity == "moderate" else "routine",
+                    "confidence": confidence,
+                    "expected_impact": self._estimate_intervention_impact(category, intervention, severity)
+                })
+
+        # Sort by priority
+        interventions.sort(key=lambda x: {"high": 3, "medium": 2, "low": 1}[x["priority"]], reverse=True)
+
+        return interventions[:10]  # Return top 10 interventions
+
+    def _calculate_intervention_priority(self, severity: str, confidence: float, category: str) -> str:
+        """Calculate intervention priority"""
+        base_priority = {"severe": 3, "moderate": 2, "mild": 1}[severity]
+        confidence_boost = 1 if confidence > 0.7 else 0
+
+        # Category-specific priority adjustments
+        critical_categories = ["economic_stability", "healthcare_access", "food_security"]
+        category_boost = 1 if category in critical_categories else 0
+
+        total_score = base_priority + confidence_boost + category_boost
+
+        if total_score >= 4:
+            return "high"
+        elif total_score >= 2:
+            return "medium"
+        else:
+            return "low"
+
+    def _estimate_intervention_impact(self, category: str, intervention: str, severity: str) -> str:
+        """Estimate expected impact of intervention"""
+        high_impact_interventions = [
+            "Financial counseling referral",
+            "Transportation assistance",
+            "Food bank referrals",
+            "Housing assistance referral"
+        ]
+
+        if intervention in high_impact_interventions and severity in ["moderate", "severe"]:
+            return "high"
+        elif severity == "severe":
+            return "medium"
+        else:
+            return "low"
+
+    def _calculate_sdoh_risk_score(self, sdoh_factors: Dict[str, Any], severity_analysis: Dict[str, Any]) -> float:
+        """Calculate overall SDOH risk score"""
+        if not sdoh_factors:
+            return 0.0
+
+        # Base score from number of factors
+        factor_count_score = min(1.0, len(sdoh_factors) / 6) * 0.4
+
+        # Severity score
+        severity_scores = []
+        for category, data in sdoh_factors.items():
+            severity = data.get("severity", "mild")
+            confidence = data.get("confidence", 0.5)
+            severity_score = self._severity_to_score(severity) / 3.0  # Normalize to 0-1
+            weighted_score = severity_score * confidence
+            severity_scores.append(weighted_score)
+
+        avg_severity_score = sum(severity_scores) / len(severity_scores) * 0.6
+
+        # Vulnerability adjustment
+        vulnerability_count = len(severity_analysis.get("vulnerability_factors", []))
+        vulnerability_score = min(0.2, vulnerability_count * 0.05)
+
+        total_score = factor_count_score + avg_severity_score + vulnerability_score
+        return min(1.0, total_score)
+
+    def _categorize_risk_level(self, risk_score: float) -> str:
+        """Categorize SDOH risk level"""
+        if risk_score >= 0.7:
+            return "High"
+        elif risk_score >= 0.4:
+            return "Moderate"
+        else:
+            return "Low"
+
+    def _generate_sdoh_insights(self, sdoh_factors: Dict[str, Any], severity_analysis: Dict[str, Any]) -> List[str]:
+        """Generate actionable insights from SDOH analysis"""
+        insights = []
+
+        # Overall insights
+        factor_count = len(sdoh_factors)
+        if factor_count >= 3:
+            insights.append(f"Multiple SDOH factors identified ({factor_count}) - comprehensive intervention needed")
+        elif factor_count >= 1:
+            insights.append(f"SDOH factors present - targeted interventions recommended")
+
+        # Category-specific insights
+        for category, data in sdoh_factors.items():
+            severity = data.get("severity", "mild")
+            if severity == "severe":
+                category_name = category.replace("_", " ").title()
+                insights.append(f"Severe {category_name} issues require immediate attention")
+
+        # Vulnerability insights
+        vulnerability_factors = severity_analysis.get("vulnerability_factors", [])
+        if vulnerability_factors:
+            insights.append(f"Patient has additional vulnerability factors: {', '.join(vulnerability_factors)}")
+
+        # Impact insights
+        high_impact_categories = []
+        for category, analysis in severity_analysis.get("category_severities", {}).items():
+            if analysis.get("impact_factors"):
+                high_impact_categories.append(category.replace("_", " ").title())
+
+        if high_impact_categories:
+            insights.append(f"High-impact areas for intervention: {', '.join(high_impact_categories)}")
+
+        return insights
+
+    def _identify_priority_areas(self, sdoh_factors: Dict[str, Any], severity_analysis: Dict[str, Any]) -> List[str]:
+        """Identify priority areas for intervention"""
+        priority_areas = []
+
+        # Sort categories by severity and confidence
+        category_priorities = []
+        for category, data in sdoh_factors.items():
+            severity_score = self._severity_to_score(data.get("severity", "mild"))
+            confidence = data.get("confidence", 0.5)
+            priority_score = severity_score * confidence
+            category_priorities.append((category, priority_score))
+
+        # Sort by priority score
+        category_priorities.sort(key=lambda x: x[1], reverse=True)
+
+        # Return top 3 priority areas
+        for category, score in category_priorities[:3]:
+            priority_areas.append(category.replace("_", " ").title())
+
+        return priority_areas
